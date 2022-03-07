@@ -1525,7 +1525,8 @@ Licensed under MIT (https://github.com/DigitalNatureGroup/see-through-captions/b
         if (translateAPI != "" && translateAPI != null) {
             translateBaseUrl = "https://script.google.com/macros/s/" + translateAPI + "/exec";
             updateConfig("translate_api", translateAPI);
-            history.replaceState('','','/index.html');
+            var url = new URL(window.location.href);
+            history.replaceState('','',url.pathname);
         }
         
         vrFunction();
