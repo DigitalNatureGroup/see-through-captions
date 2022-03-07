@@ -1,0 +1,1534 @@
+<!-- ============================================================================================
+Copyright (c) 2022 Digital Nature Group, University of Tsukuba & xDiversity
+Licensed under MIT (https://github.com/DigitalNatureGroup/see-through-captions/blob/main/LICENSE)
+============================================================================================= -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Controller | See-Through Captions</title>
+    <link rel="stylesheet" href="./src/style.css?ver=202112281400" type="text/css" media="screen" charset="utf-8" />
+    <script src="./submodule/kuromoji/build/kuromoji.js"></script>
+</head>
+<body class="controller">
+    <div class="controller_ui">
+        <div id="translation_toast" class="toast"></div>
+        <section class="status_wrapper">
+            <div id="status" class="ready"><span>状態未確認</span></div>
+            <div id="language_turn_switch" class="switch" onclick="reverseLanguage()"><span>ターンスイッチ</span></div>
+            <div id="delete_text" class="delete" onclick="deleteText()"><span>字幕削除</span></div>
+            <div id="" class="switch" onclick="newline()"><span>改行</span></div>
+            <div id="" class="switch" onclick="putExclamationMark()"><span>びっくり</span></div>
+            <div id="" class="switch" onclick="putQuestionMark()"><span>はてな</span></div>
+        </section>
+
+        <div class="error_message_wrapper">
+            <p id="error_message_text"></p>
+        </div>
+
+        <section class="radios_wrapper_with_button display_none">
+            <div id="recognition_language" class="radio_wrapper">
+                <div class="radio_label">認識言語</div>
+                <div class="radio">
+                    <input type="radio" name="recognition_language_template" id="recognition_language_template_01" value="1" oninput="updateCountry(1)" checked>
+                    <label for="recognition_language_template_01">日本語</label>
+                    <input type="radio" name="recognition_language_template" id="recognition_language_template_02" value="2" oninput="updateCountry(2)">
+                    <label for="recognition_language_template_02">English</label>
+                    <input type="radio" name="recognition_language_template" id="recognition_language_template_03" value="58" oninput="updateCountry(this.value)">
+                    <label for="recognition_language_template_03" id="recognition_language_change">中文</label>
+                    <select id="select_language" class="selector" onchange="updateRecognitionLanguageMenu(this.value)"></select>
+                </div>
+            </div>
+
+            <input type="image" src="./src/reverse.png" width="150px" onclick="reverseLanguage()">
+
+            <div id="translation_language" class="radio_wrapper">
+                <div class="radio_label">翻訳言語</div>
+                <div class="radio">
+                    <input type="radio" name="translation_language_template" id="translation_language_template_01" value="1" oninput="updateTranslationLanguage(1)"checked>
+                    <label for="translation_language_template_01">日本語</label>
+                    <input type="radio" name="translation_language_template" id="translation_language_template_02" value="2" oninput="updateTranslationLanguage(2)">
+                    <label for="translation_language_template_02">English</label>
+                    <input type="radio" name="translation_language_template" id="translation_language_template_03" value="58" oninput="updateTranslationLanguage(this.value)">
+                    <label for="translation_language_template_03" id="translation_language_change">中文</label>
+                    <select id="select_translate_language" class="selector" onchange="updateTranslationLanguageMenu(this.value)"></select>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="toggles_wrapper">
+            <div id="" class="toggle_wrapper">
+                <label class="toggle_label">文字起こし</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_recognition" oninput="toggleRecognitionCheckbox(this)" checked>
+                </div>
+            </div>
+
+            <div id="" class="toggle_wrapper">
+                <label class="toggle_label">声で操作</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_voice_command" oninput="toggleVoiceCommandCheckbox(this)">
+                </div>
+            </div>
+
+            <div id="checkbox_hiragana_wrapper" class="toggle_wrapper">
+                <label class="toggle_label">ひらがな</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_hiragana" oninput="initKuromoji(this)">
+                </div>
+            </div>
+
+            <div id="checkbox_ruby_wrapper" class="toggle_wrapper">
+                <label class="toggle_label">振り仮名</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_ruby" oninput="initKuromoji(this)">
+                </div>
+            </div>
+            
+            <div id="" class="toggle_wrapper">
+                <label class="toggle_label">文字表示</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_display_text" oninput="toggleDisplayTextCheckbox(this)" checked>
+                </div>
+            </div>
+
+            <div id="" class="toggle_wrapper">
+                <label class="toggle_label">文字反転</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_mirror_text_both" oninput="toggleMirroTextBoth()">
+                </div>
+            </div>
+
+            <div id="" class="toggle_wrapper">
+                <label class="toggle_label">フチ色</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_stroke" oninput="toggleStroke(this)">
+                </div>
+            </div>
+
+            <div id="" class="toggle_wrapper">
+                <label class="toggle_label">黄色文字</label>
+                <div class="toggle_body">
+                    <input type="checkbox" id="checkbox_text_color_yellow" oninput="toggleTextColorYellow(this)">
+                </div>
+            </div>
+        </section>
+
+        <section class="radios_wrapper">
+            <div id="selector_12inch" class="radio_wrapper">
+                <div class="radio_label">文字サイズ</div>
+                <div class="radio">
+                    <form id="select_font_size_12inch">
+                        <input type="radio" name="selector_12inch_template" id="selector_12inch_template_01" value="300" oninput="updateConfig('select_font_size_12inch', 0), updateConfig('slider_font_size', '300'), updateFontSize(300)">
+                        <label for="selector_12inch_template_01">特大</label>
+                        <input type="radio" name="selector_12inch_template" id="selector_12inch_template_02" value="135" oninput="updateConfig('select_font_size_12inch', 1), updateConfig('slider_font_size', '135'), updateFontSize(135)">
+                        <label for="selector_12inch_template_02">大</label>
+                        <input type="radio" name="selector_12inch_template" id="selector_12inch_template_03" value="93" oninput="updateConfig('select_font_size_12inch', 2), updateConfig('slider_font_size', '93'), updateFontSize(93)">
+                        <label for="selector_12inch_template_03">中</label>
+                        <input type="radio" name="selector_12inch_template" id="selector_12inch_template_04" value="68" oninput="updateConfig('select_font_size_12inch', 3), updateConfig('slider_font_size', '68'), updateFontSize(68)" checked>
+                        <label for="selector_12inch_template_04">小</label>
+                    </form>
+                </div>
+            </div>
+
+            <div id="selector_4inch" class="radio_wrapper display_none">
+                <div class="radio_label">文字サイズ</div>
+                <div class="radio">
+                    <form id="select_font_size_4inch">
+                        <input type="radio" name="selector_4inch_template" id="selector_4inch_template_03" value="68" oninput="updateFontSize(68), updateConfig('slider_font_size', '68'), updateConfig('select_font_size_4inch', 0)">
+                        <label for="selector_4inch_template_03">大</label>
+                        <input type="radio" name="selector_4inch_template" id="selector_4inch_template_04" value="48" oninput="updateFontSize(48), updateConfig('slider_font_size', '48'), updateConfig('select_font_size_4inch', 1)" checked>
+                        <label for="selector_4inch_template_04">中</label>
+                    </form>
+                </div>
+            </div>
+
+            <div id="selector_autoclear_text" class="radio_wrapper">
+                <div class="radio_label">自動消去</div>
+                <div class="radio">
+                    <form id="select_autoclear_text">
+                        <input type="radio" name="selector_autoclear" id="selector_autoclear_0" value="5" oninput="updateTextClearSecond(5), updateConfig('select_autoclear_text', 0)">
+                        <label for="selector_autoclear_0">5秒</label>
+                        <input type="radio" name="selector_autoclear" id="selector_autoclear_1" value="10" oninput="updateTextClearSecond(10), updateConfig('select_autoclear_text', 1)">
+                        <label for="selector_autoclear_1">10秒</label>
+                        <input type="radio" name="selector_autoclear" id="selector_autoclear_2" value="20" oninput="updateTextClearSecond(20), updateConfig('select_autoclear_text', 2)" checked>
+                        <label for="selector_autoclear_2">20秒</label>
+                        <input type="radio" name="selector_autoclear" id="selector_autoclear_3" value="30" oninput="updateTextClearSecond(30), updateConfig('select_autoclear_text', 3)">
+                        <label for="selector_autoclear_3">30秒</label>
+                        <input type="radio" name="selector_autoclear" id="selector_autoclear_4" value="60" oninput="updateTextClearSecond(60), updateConfig('select_autoclear_text', 4)">
+                        <label for="selector_autoclear_4">60秒</label>
+                    </form>
+                </div>
+            </div>
+        
+        </section>
+
+        <input class="checkboxes checkbox_advanced" id="checkbox_controls" type="checkbox"><label class="checkboxes_label">詳細設定を表示</label>
+        <div class="controls_wrapper control_wrapper_row">
+            <div class="col-12 control_wrapper_col">
+                <div class="control_wrapper">
+                    <div class="control_form control_form_slider col-3">
+                        <label for="slider_font_size" class="control_label toggle_design">文字サイズ</label>
+                        <input id="slider_font_size" type="range" class="control_input" value="68" min="1" max="300" step="1"
+                            oninput="updateFontSizeSlider(this.value)">
+                        <div class="control_value">
+                            <span id="value_font_size">68</span><span class="value_unit">px</span>
+                        </div>
+                        <label for="slider_flip_font_size" class="control_label toggle_design">反転文字サイズ</label>
+                        <input id="slider_flip_font_size" type="range" class="control_input" value="20" min="1" max="50" step="1"
+                            oninput="screenWindow.document.getElementById('result_text_flip').style.fontSize=this.value+'px',document.getElementById('value_flip_font_size').innerHTML=this.value">
+                        <div class="control_value">
+                            <span id="value_flip_font_size">20</span><span class="value_unit">px</span>
+                        </div>
+                    </div>
+
+                    <div class="control_form control_form_slider col-3">
+                        <label for="slider_line_height" class="control_label toggle_design">行間</label>
+                        <input id="slider_line_height" type="range" class="control_input" value="163" min="100" max="300" step="1"
+                            oninput="screenWindow.document.getElementById('result_text').style.lineHeight=this.value+'%',document.getElementById('value_line_height').innerHTML=this.value">
+                        <div class="control_value">
+                            <span id="value_line_height">163</span><span class="value_unit">%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control_form control_form_slider col-3">
+                        <label for="slider_letter_spacing" class="control_label toggle_design">字間</label>
+                        <input id="slider_letter_spacing" type="range" class="control_input" value="0.05" min="0" max="1" step="0.01"
+                            oninput="screenWindow.document.getElementById('result_text').style.letterSpacing=this.value+'em',document.getElementById('value_letter_spacing').innerHTML=this.value">
+                        <div class="control_value">
+                            <span id="value_letter_spacing">0.05</span>
+                        </div>
+                    </div>
+
+                    <div class="control_form control_form_color col-2">
+                        <label for="selector_text_color" class="control_label toggle_design">文字色</label>
+                        <input id="selector_text_color" type="color" class="control_input" value="#ffffff"
+                            oninput="screenWindow.document.getElementById('result_text').style.color=this.value">
+                    </div>
+
+                    <div class="control_form control_form_slider col-3">
+                        <label for="slider_text_shadow_stroke" class="control_label toggle_design">影</label>
+                        <input id="slider_text_shadow_stroke" type="range" class="control_input" value="5" min="0" max="20" step="0.1"
+                            oninput="screenWindow.document.getElementById('result_text').style.textShadow='0 0 '+this.value+'px '+document.getElementById('selector_text_shadow_color').value,document.getElementById('value_text_shadow_stroke').innerHTML=this.value">
+                        <div class="control_value">
+                            <span id="value_text_shadow_stroke">5</span><span class="value_unit">px</span>
+                        </div>
+                    </div>
+
+                    <div class="control_form control_form_color col-3">
+                        <label for="selector_text_shadow_color" class="control_label toggle_design">影色</label>
+                        <input id="selector_text_shadow_color" type="color" class="control_input" value="#000000"
+                            oninput="screenWindow.document.getElementById('result_text').style.textShadow='0 0 '+document.getElementById('slider_text_shadow_stroke').value+'px '+this.value">
+                    </div>
+                    
+                    <div class="control_form control_form_slider col-3">
+                        <label for="slider_text_stroke" class="control_label toggle_design">縁</label>
+                        <input id="slider_text_stroke" type="range" class="control_input" value="0.0" min="0" max="5" step="0.01"
+                            oninput="screenWindow.document.getElementById('result_text').style.webkitTextStrokeWidth=this.value+'px',document.getElementById('value_text_stroke').innerHTML=this.value">
+                        <div class="control_value">
+                            <span id="value_text_stroke">0.0</span><span class="value_unit">px</span>
+                        </div>
+                    </div>
+
+                    <div class="control_form control_form_color col-3">
+                        <label for="selector_text_stroke_color" class="control_label toggle_design">縁色</label>
+                        <input id="selector_text_stroke_color" type="color" class="control_input" value="#000000"
+                            oninput="screenWindow.document.getElementById('result_text').style.webkitTextStrokeColor=this.value">
+                    </div>
+
+                    <div class="control_form control_form_slider col-3">
+                        <label for="slider_opacity" class="control_label toggle_design">透明度</label>
+                        <input id="slider_opacity" type="range" class="control_input" value="1" min="0" max="1" step="0.05"
+                            oninput="screenWindow.document.getElementById('result_text').style.opacity=this.value,document.getElementById('value_opacity').innerHTML=this.value">
+                        <div class="control_value">
+                            <span id="value_opacity">1</span>
+                        </div>
+                    </div>
+
+                    <div class="control_form control_form_selector col-3">
+                        <label for="select_font" class="control_label toggle_design">フォント </label>
+                        <select id="select_font" onchange="screenWindow.document.getElementById('result_text').style.fontFamily=fontsCustom[select_font.selectedIndex][1]" style="width: 94%; height: 100%;"></select>
+                    </div>
+
+                    <div class="control_form control_form_selector col-3">
+                        <label for="select_weight" class="control_label toggle_design">ウェイト </label>
+                        <select id="select_weight" onchange="screenWindow.document.getElementById('result_text').style.fontWeight=weights_custom[select_weight.selectedIndex]" style="width: 40%; height: 100%;"></select>
+                    </div>
+
+                    <div class="control_form control_form_checkbox col-3">
+                        <input id="checkbox_ruby_font_scaling" type="checkbox" name="ruby_font_scaling" oninput="updateRubyUI()" checked>
+                        <label for="checkbox_ruby_font_scaling" class="control_label toggle_design">ルビ表示時の文字サイズ補正 </label>
+                    </div>
+
+                    <div class="control_form control_form_checkbox col-2">
+                        <input id="checkbox_mirror_text" type="checkbox" name="mirror_text" oninput="toggleMirrorTextCheckbox(this)">
+                        <label for="checkbox_mirror_text" class="control_label toggle_design">上文字反転 </label>
+                    </div>
+
+                    <div class="control_form control_form_checkbox col-2">
+                        <input id="checkbox_mirror_text_flip" type="checkbox" name="mirror_text_flip" oninput="toggleMirrorTextCheckbox(this)">
+                        <label for="checkbox_mirror_text_flip" class="control_label toggle_design">下文字反転 </label>
+                    </div>
+
+                    <div class="control_form control_form_checkbox col-2">
+                        <input id="checkbox_flip_text_position" type="checkbox" name="flip_text_position" oninput="toggleFlipTextPosition(this)">
+                        <label for="checkbox_flip_text_position" class="control_label toggle_design">鏡文字を上に表示 </label>
+                    </div>
+
+                    <div class="control_form control_form_textarea col-12 bottom">
+                        <label for="textarea_api" class="control_label toggle_design">翻訳API入力欄 </label>
+                        <form onsubmit="setTransateAPIbyTextBox(textarea_api.value); return false;">
+                            <input id="textarea_api" type="text">
+                            <input type="submit" value="実行">
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="control_button_wrapper">
+                <input type="button" class="toggle_design" value="設定初期化" 
+                onclick="deleteConfig()">
+
+                <input type="button" id="displayModeToggle" class="toggle_design" value="ディスプレイサイズ切替" onclick="toggleDisplayMode()">
+                <input type="button" id="deleteText" class="toggle_design" value="字幕削除" onclick="deleteText()">
+            </div>
+
+            <section class="status_wrapper">
+                <div id="status_display_mode" class="information">ディスプレイ: <span>12″</span></div>
+            </section>
+        </div>
+
+        <div class="fix_text">
+            <button id="openModal" onclick="openModal()">文字修正</button>
+            <div id="mask" class="hidden" onclick="closeModal()"></div>
+            <section id="modal" class="hidden">
+                <textarea name="fixText" id="fixText" placeholder="文字修正用入力欄" oninput="textAreaHeightSet(this)" onchange="textAreaHeightSet(this)"></textarea>
+                <button id="closeModal" onclick="closeModal()">×閉じる</button>
+                <p id="modalDescription">音声認識を再開するには閉じるを押してください</p>
+            </section>
+        </div>
+    </div>
+
+    <div class="subwindow_button_wrapper">
+        <div id="subwindow_button" class="switch" onclick="disp('screen.html')"><span>サブウィンドウを開く</span></div>
+    </div>
+</body>
+
+<script>
+    // サブウインドウを開く ----------------------------------------
+    let screenWindow;
+    function disp(url) {
+        screenWindow = window.open(url, 'window_name', 'width=1440,height=540,scrollbars=yes,resizable=yes,status=yes');
+        document.getElementsByClassName("controller_ui")[0].style.display = "block";
+        document.getElementById("subwindow_button").style.border = "1px #555555 solid";
+        document.getElementById("subwindow_button").style.color = "#555555";
+    }
+
+    // ブラウザ判定 ----------------------------------------
+    // 参考: https://qiita.com/sakuraya/items/33f93e19438d0694a91d
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    let isChrome = 0;
+
+    if (userAgent.indexOf('msie') != -1 || userAgent.indexOf('trident') != -1) {
+        // IE
+    } else if (userAgent.indexOf('edge') != -1) {
+        // Edge
+    } else if (userAgent.indexOf('chrome') != -1) {
+        // Chrome
+        isChrome = 1;
+    } else if (userAgent.indexOf('safari') != -1) {
+        // Safari
+    } else if (userAgent.indexOf('firefox') != -1) {
+        // Firefox
+    } else if (userAgent.indexOf('opera') != -1) {
+        // Opera
+    } else {
+        // その他
+    }
+
+    if (!isChrome) {
+        alert('Google Chromeでアクセスしてください')
+        document.getElementById('status').innerHTML = "Google Chromeでアクセスしてください";
+        document.getElementById('status').className = "error";
+        exit;
+    }
+
+
+    // 音声認識メイン処理 ----------------------------------------
+    // 参考: https://jellyware.jp/kurage/iot/webspeechapi.html
+    let speechFlag = 0;
+    let recognition;
+    let lang = 'ja-JP';
+    let lastFinished = '';
+    let textUpdateTimeoutID = 0;
+    let textUpdateTimeoutSecond = 10; // 音声認識結果が更新されない場合にクリアするまでの秒数（0以下の場合は自動クリアしない）
+    let translateBaseUrl = '';
+    let sourceLanguage = 'ja';
+    let targetLanguage = 'en';
+    let isRecognition = false;
+    let isVoiceCommand = false;
+    let isDemoText = false;
+    let exclamationMarkFlag = false;
+    let questionMarkFlag = false;
+
+    function vrFunction() {
+        window.SpeechRecognition = window.SpeechRecognition || webkitSpeechRecognition;
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = lang;
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onsoundstart = () => {
+            updateStatusDisplay('status', "認識中...", "processing");
+        };
+        recognition.onnomatch = () => {
+            updateStatusDisplay('status', "音声を認識出来ませんでした", "error");
+        };
+        recognition.onerror = (e) => {
+            if (e.error == "aborted") return;
+            updateStatusDisplay('status', "エラー", "error");
+            if (speechFlag == 0 && isRecognition) {
+                navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: false
+                }).then((stream) => {
+                    vrFunction();
+                }).catch((err) => {
+                    if (String(err) == 'NotAllowedError: Permission denied') {
+                        document.getElementById("error_message_text").innerHTML = "マイクのアクセス許可がありません．アドレスバーの右側にあるマイクアイコンから，マイクのアクセスを許可してページをリロードしてください．"
+                    }
+                });
+            }
+        };
+        recognition.onsoundend = () => {
+            updateStatusDisplay('status', "停止中", "error");
+            if (isRecognition) 
+                vrFunction();
+        };
+
+        recognition.onresult = (event) => {
+            screenWindow.document.getElementById("scroll_description").style.display = "none";
+            let results = event.results;
+            let currentTranscripts = '';
+            let needReset = false;
+            for (let i = event.resultIndex; i < results.length; i++) {
+                if (results[i].isFinal) {
+                    lastFinished = results[i][0].transcript;
+                    if (lang == 'ja-JP') {
+                        if (exclamationMarkFlag) {
+                            lastFinished += '！';
+                            exclamationMarkFlag = false;
+                        } else if (questionMarkFlag) {
+                            lastFinished += '？';
+                            questionMarkFlag = false;
+                        } else {
+                            lastFinished += '。';
+                        }
+                    }
+                    
+                    if (lastFinished.includes('音声コマンド機能を起動して')) {
+                        if (!isVoiceCommand) {
+                            toggleVoiceCommand();
+                            showToast('音声コマンド機能が起動しました');
+                        }
+                    } else if (lastFinished.includes('音声コマンド機能を停止して')) {
+                        if (isVoiceCommand) {
+                            toggleVoiceCommand();
+                            showToast('音声コマンド機能が停止しました');
+                        }
+                    }
+
+                    if (isVoiceCommand){
+                        if (lastFinished.includes('英語に翻訳して')) {
+                            targetLanguage = 'en';
+                            document.getElementById('select_translate_language').selectedIndex = 1
+                            showToast('翻訳言語が「英語」に切り替わりました');
+                        } else if (lastFinished.includes('翻訳モードを解除して')) {
+                            targetLanguage = 'ja'
+                            document.getElementById('select_translate_language').selectedIndex = 0
+                            showToast('翻訳モードを解除しました');
+                        }
+
+                        if (lastFinished.includes('文字を大きくして')) {
+                            screenWindow.document.getElementById('result_text').style.fontSize = (config.display_size==12 ? 135 : 68) + 'px';
+                            document.getElementById('slider_font_size').value = config.display_size==12 ? 135 : 68;
+                            document.getElementById('value_font_size').innerHTML = config.display_size==12 ? 135 : 68;
+                        } else if (lastFinished.includes('文字を普通にして')) {
+                            screenWindow.document.getElementById('result_text').style.fontSize= (config.display_size==12 ? 93 : 48) + 'px';
+                            document.getElementById('slider_font_size').value = config.display_size==12 ? 93 : 48;
+                            document.getElementById('value_font_size').innerHTML = config.display_size==12 ? 93 : 48;
+                        } else if (lastFinished.includes('文字を小さくして')) {
+                            screenWindow.document.getElementById('result_text').style.fontSize= (config.display_size==12 ? 68 : 32) + 'px';
+                            document.getElementById('slider_font_size').value = config.display_size==12 ? 68 : 32;
+                            document.getElementById('value_font_size').innerHTML = config.display_size==12 ? 68 : 32;
+                        }
+
+                        if (lastFinished.includes('ふりがなをつけて')) {
+                            document.getElementById('checkbox_ruby').checked = true;
+                            initKuromoji(document.getElementById('checkbox_ruby'))
+                        } else if (lastFinished.includes('ふりがなを解除して')) {
+                            document.getElementById('checkbox_ruby').checked = false;
+                            initKuromoji(document.getElementById('checkbox_ruby'))
+                        }
+
+                        if (lastFinished.includes('ひらがなにして')) {
+                            document.getElementById('checkbox_hiragana').checked = true;
+                            initKuromoji(document.getElementById('checkbox_hiragana'))
+                        } else if (lastFinished.includes('ひらがなを解除して')) {
+                            document.getElementById('checkbox_hiragana').checked = false;
+                            initKuromoji(document.getElementById('checkbox_hiragana'))
+                        }
+                    }
+
+                    if (sourceLanguage != targetLanguage) {
+                        fetch(`${translateBaseUrl}?text=${lastFinished}&source=${sourceLanguage}&target=${targetLanguage}`)
+                        .then((res)=>{
+                            return( res.json() );
+                        })
+                        .then((json)=>{
+                            if(document.getElementById('checkbox_hiragana').checked && targetLanguage == 'ja'){
+                                screenWindow.document.getElementById('result_text').innerHTML = resultToHiragana(json.text);
+                                lastFinished = resultToHiragana(json.text);
+                            }else if(document.getElementById('checkbox_ruby').checked && targetLanguage == 'ja') {
+                                screenWindow.document.getElementById('result_text').innerHTML = resultToRuby(json.text);
+                                lastFinished = resultToRuby(json.text);
+                            }else{
+                                screenWindow.document.getElementById('result_text').innerHTML = json.text;
+                                lastFinished = json.text;
+                            }
+                        });
+                    }
+
+                    needReset = true;
+                    speechFlag = 0;
+                } else {
+                    currentTranscripts += results[i][0].transcript;
+                    speechFlag = 1;
+                }
+            }
+
+            if(document.getElementById('checkbox_hiragana').checked && sourceLanguage == 'ja'){
+                if (targetLanguage == "zh") {
+                    screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, resultToHiragana(currentTranscripts)].join('<br>');
+                } else {
+                    screenWindow.document.getElementById('result_text').innerHTML = [resultToHiragana(lastFinished), resultToHiragana(currentTranscripts)].join('<br>');
+                }
+                screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, currentTranscripts].join('<br>');
+            }else if(document.getElementById('checkbox_ruby').checked && sourceLanguage == 'ja'){
+                if (targetLanguage == "zh") {
+                    screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, resultToRuby(currentTranscripts)].join('<br>');
+                } else {
+                    screenWindow.document.getElementById('result_text').innerHTML = [resultToRuby(lastFinished), resultToRuby(currentTranscripts)].join('<br>');
+                }
+                screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, currentTranscripts].join('<br>');
+            }else{
+                screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, currentTranscripts].join('<br>');
+                screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, currentTranscripts].join('<br>');
+            }
+
+            setTimeoutForClearText();
+
+            if (needReset) { vrFunction(); }
+        }
+
+        speechFlag = 0;
+        updateStatusDisplay('status', "待機中", "ready");
+        recognition.start();
+        isRecognition = true;
+    }
+
+    // 音声認識のON/OFF
+    function toggleRecognition(){
+        if (isRecognition){
+            recognition.stop()
+            isRecognition = false
+        }
+        else {
+            recognition.start()
+            isRecognition = true
+        }
+        document.getElementById('checkbox_recognition').checked = isRecognition
+    }
+    function toggleRecognitionCheckbox(checkbox){
+        if(checkbox.checked != isRecognition) {
+            toggleRecognition()
+        }
+    }
+
+    // 音声コマンドのON/OFF
+    function toggleVoiceCommand(){
+        isVoiceCommand = !isVoiceCommand
+        document.getElementById('checkbox_voice_command').checked = isVoiceCommand
+    }
+    function toggleVoiceCommandCheckbox(checkbox){
+        if(checkbox.checked != isVoiceCommand) {
+            toggleVoiceCommand()
+        }
+    }
+
+    // 認識を手動で止める（文を区切る）
+    document.addEventListener('keydown',
+    event => {
+        if (event.key === 'Enter') {
+            if(speechFlag == 1){
+                recognition.stop();
+            }
+        }
+    });
+
+    
+    // 形態素解析 ----------------------------------------
+    let kuromojiTokenizer;
+
+    function initKuromoji(checkbox) {
+        if(checkbox.checked == true && kuromojiTokenizer == undefined){
+            kuromoji.builder({ dicPath: "submodule/kuromoji/dict/" }).build((err, tokenizer) => {
+                kuromojiTokenizer = tokenizer
+            });
+        }
+
+        let isFontSizeToggleChecked = false;
+        if (config.display_size == 12) {
+            for (let i = 0; i < 4; i++) {
+                if (select_font_size_12inch[i].checked) {
+                    isFontSizeToggleChecked = true;
+                    break;
+                }
+            }
+        } else {
+            for (let i = 0; i < 2; i++) {
+                if (select_font_size_4inch[i].checked) {
+                    isFontSizeToggleChecked = true;
+                    break;
+                }
+            }
+        }
+
+        if (isFontSizeToggleChecked) {
+            if (config.display_size == 12 ) {
+                updateFontSize(select_font_size_12inch[config.select_font_size_12inch].value);
+            } else {
+                updateFontSize(select_font_size_4inch[config.select_font_size_4inch].value);
+            }
+        }
+    }
+
+    // 結果にルビをつける
+    function resultToRuby(text) {
+        if(kuromojiTokenizer == undefined){
+            return text;
+        }
+        let rubyResult = '';
+
+        let kuromojiResult = kuromojiTokenizer.tokenize(text);
+        for (let i = 0; i < kuromojiResult.length; i++) {
+            if(kuromojiResult[i].word_type == "KNOWN"){
+                if (kuromojiResult[i].surface_form.match(/[\u4E00-\u9FFF]/) != null) {
+                    let compoundVerbFlag = false;
+                    rubyHiragana = katakanaToHiragana(kuromojiResult[i].reading)
+
+                    // 美化語と送り仮名をルビに入れない処理
+                    let bikagoCount = 0;
+                    let okuriganaCount = 0;
+                    // 美化語判定
+                    for (let j = 0; j < rubyHiragana.length; j++) {
+                        if (kuromojiResult[i].surface_form.slice(j, j+1) == rubyHiragana.slice(j, j+1)) {
+                            bikagoCount++;
+                        } else {
+                            break;
+                        }
+                    }
+                    // 複合動詞判定
+                    let pattern =  /^[\u4E00-\u9FFF]+[\u3041-\u3093]+[\u4E00-\u9FFF]+$/
+                    if (kuromojiResult[i].surface_form.match(pattern)) {
+                        compoundVerbFlag = true;
+                        for (let j = 0; j < rubyHiragana.length; j++) {
+                            // surfaceForm中最初のひらがなのインデックス
+                            const surfaceStartPoint = kuromojiResult[i].surface_form.match(/[\u3041-\u3093]/).index
+                            if (kuromojiResult[i].surface_form[surfaceStartPoint] == rubyHiragana[j]) {
+                                // reading中最初のひらがなのインデックス
+                                const readingStartPoint = j;
+                                break;
+                            }
+                        }
+                    }
+                    for (let j = 1; j < kuromojiResult[i].surface_form.length; j++) {
+                        // 送り仮名判定
+                        if (kuromojiResult[i].surface_form.slice(-(j)) == rubyHiragana.slice(-(j))) {
+                            okuriganaCount++;
+                        }
+                    }
+                    if (bikagoCount == 0 && okuriganaCount == 0 && !compoundVerbFlag) {
+                        rubyResult += `<ruby>${kuromojiResult[i].surface_form}<rt>${rubyHiragana}</rt></ruby>`;
+                    } else if (compoundVerbFlag) {
+                        if (okuriganaCount == 0) {
+                            rubyResult += `<ruby>${kuromojiResult[i].surface_form.slice(0, surfaceStartPoint)}<rt>${rubyHiragana.slice(0, readingStartPoint)}</rt></ruby>${rubyHiragana[readingStartPoint]}<ruby>${kuromojiResult[i].surface_form.slice(surfaceStartPoint+1)}<rt>${rubyHiragana.slice(readingStartPoint+1)}</rt></ruby>`
+                        } else {
+                            rubyResult += `<ruby>${kuromojiResult[i].surface_form.slice(0, surfaceStartPoint)}<rt>${rubyHiragana.slice(0, readingStartPoint)}</rt></ruby>${rubyHiragana[readingStartPoint]}<ruby>${kuromojiResult[i].surface_form.slice(surfaceStartPoint+1, -(okuriganaCount))}<rt>${rubyHiragana.slice(readingStartPoint+1, -(okuriganaCount))}</rt></ruby>${rubyHiragana.slice(-(okuriganaCount))}`
+                        }
+                    } else {
+                        if (okuriganaCount == 0) {
+                            rubyResult += `${kuromojiResult[i].surface_form.slice(0, bikagoCount)}<ruby>${kuromojiResult[i].surface_form.slice(bikagoCount)}<rt>${rubyHiragana.slice(bikagoCount)}</rt></ruby>`
+                        } else {
+                            rubyResult += `${kuromojiResult[i].surface_form.slice(0, bikagoCount)}<ruby>${kuromojiResult[i].surface_form.slice(bikagoCount, -(okuriganaCount))}<rt>${rubyHiragana.slice(bikagoCount, -(okuriganaCount))}</rt></ruby>${rubyHiragana.slice(-(okuriganaCount))}`
+                        }
+                    }
+                } else {
+                    rubyResult += kuromojiResult[i].surface_form;
+                }
+            }else{
+                rubyResult += kuromojiResult[i].surface_form;
+            }
+        }
+        return rubyResult;
+    }
+
+    // 結果をひらがなにする
+    function resultToHiragana(text) {
+        if (text == null || text.length === 0) return '';
+        if(kuromojiTokenizer == undefined){
+            return text;
+        }
+        let kuromojiResult = kuromojiTokenizer.tokenize(text);
+        let hiraganaResult = '';
+        for (let i = 0; i < kuromojiResult.length; i++) {
+            if(kuromojiResult[i].word_type == "KNOWN"){
+                hiraganaResult += kuromojiResult[i].reading;
+            }else{
+                hiraganaResult += kuromojiResult[i].surface_form;
+            }
+        }
+        return katakanaToHiragana(hiraganaResult);
+    }
+
+    // カタカナをひらがなにする
+    // 参考: https://gist.github.com/kawanet/5553478
+    function katakanaToHiragana(src) {
+        return src.replace(/[\u30a1-\u30f6]/g, (match) => {
+            let chr = match.charCodeAt(0) - 0x60;
+            return String.fromCharCode(chr);
+        });
+    }
+
+    function updateStatusDisplay(target, innnerHTML, className) {
+        document.getElementById(target).children[0].innerHTML = innnerHTML;
+        document.getElementById(target).className = className;
+    }
+
+
+    // テキスト自動消去 ----------------------------------------
+
+    // タイムアウト時にテキストを消去
+    function clearTimeoutForClearText() {
+        if (textUpdateTimeoutID !== 0) {
+            clearTimeout(textUpdateTimeoutID);
+            textUpdateTimeoutID = 0;
+        }
+    }
+
+    // 変数 textUpdateTimeoutSecond に基づいてタイマーを設定する。
+    // タイマーの時間切れで、字幕を自動的に消去する。
+    // 変数の値がゼロ以下の場合はタイマーは設定されない。
+    // タイマーが既に動いている場合、処理タイミングは後からのもので上書きする。
+    function setTimeoutForClearText() {
+        if (textUpdateTimeoutSecond <= 0) return;
+
+        clearTimeoutForClearText();
+        textUpdateTimeoutID = setTimeout(
+            () => {
+                screenWindow.document.getElementById('result_text').innerHTML = "";
+                screenWindow.document.getElementById('result_text_flip').innerHTML = "";
+                lastFinished = '';
+                textUpdateTimeoutID = 0;
+
+                let is4inch = screenWindow.document.getElementById('main').classList.contains('display_4inch');
+
+                if (!is4inch && isDemoText) {
+                    screenWindow.document.getElementById("scroll_description").style.display = "inline-block";
+                }
+            }, 
+            textUpdateTimeoutSecond * 1000);
+    }
+
+    function updateTextClearSecond(second) {
+        let sec = second;
+        if ((!isNaN(sec)) && isFinite(sec) && (sec >= 0)) {
+            textUpdateTimeoutSecond = sec;
+        }
+    }
+
+    // フォント切替 ----------------------------------------
+    const fontsCustom =
+        [['Noto Sans JP',     "'Noto Sans JP', sans-serif"],
+        ['BIZ UD ゴシック（Windows 10）', "'BIZ UDゴシック', 'BIZ UDGothic', 'Noto Sans JP', sans-serif"],
+        ['BIZ UD 明朝（Windows 10）', "'BIZ UD明朝', 'BIZ UDMincho', 'Noto Sans JP', sans-serif"],
+        ['游ゴシック', "游ゴシック体, 'Yu Gothic', YuGothic, sans-serif"],
+        ['メイリオ', "'メイリオ', 'Meiryo', 'Noto Sans JP', sans-serif"],
+        ['ポップ体（Windows）', "'HGS創英角ﾎﾟｯﾌﾟ体', 'Noto Sans JP', sans-serif"],
+        ['ゴシック体（ブラウザ標準）', "sans-serif"],
+        ['明朝体（ブラウザ標準）',    "serif"]];
+
+    for (let i = 0; i < fontsCustom.length; i++) {
+        select_font.options[i] = new Option(fontsCustom[i][0], i);
+    }
+
+    // デフォルトのフォントを設定
+    select_font.selectedIndex = 0;
+
+
+    // ウェイト切替 ----------------------------------------
+    const weights_custom =
+        ['100', '300', '400', '500', '700', '900'];
+
+    for (let i = 0; i < weights_custom.length; i++) {
+        select_weight.options[i] = new Option(weights_custom[i], i);
+    }
+    // デフォルトのウェイトを設定
+    select_weight.selectedIndex = 4;
+
+
+    // フォントサイズ変更 ----------------------------------------
+    // ユーザー入力の方法を複数用意しているので，画面のスタイル変更とスライダーのvalue表示の変更を関数化した
+    function updateFontSize(value){
+        let fontSize = value;
+
+        if (checkbox_ruby.checked && checkbox_ruby_font_scaling.checked) {
+            if (config.display_size == 12) {
+                switch (config.select_font_size_12inch) {
+                    case 0:
+                        fontSize *= 0.8;
+                        break;
+                    case 1:
+                        fontSize *= 0.93;
+                        break;
+                    case 2:
+                        fontSize *= 0.91;
+                        break;
+                    case 3:
+                        fontSize *= 0.96;
+                        break;
+                }
+            }
+            if (config.display_size == 4 && checkbox_ruby_font_scaling.checked) {
+                switch (config.select_font_size_4inch) {
+                    case 0:
+                        fontSize *= 0.93;
+                        break;
+                    case 1:
+                        fontSize *= 0.99;
+                        break;
+                }
+            }
+        }
+
+        screenWindow.document.getElementById('result_text').style.fontSize=String(fontSize)+'px';
+        document.getElementById('slider_font_size').value=fontSize;
+        document.getElementById('value_font_size').innerHTML=fontSize;
+    }
+
+    function updateFontSizeSlider(value) {
+        screenWindow.document.getElementById('result_text').style.fontSize=String(value)+'px';
+        document.getElementById('slider_font_size').value=value;
+        document.getElementById('value_font_size').innerHTML=value;
+        if (config.display_size == 12) {
+            for (let i = 0; i < 4; i++) {
+                if (select_font_size_12inch[i].value == value) {
+                    select_font_size_12inch[i].checked = true;
+                    updateConfig("select_font_size_12inch", i);
+                    break;
+                }
+                select_font_size_12inch[config.select_font_size_12inch].checked = false;
+            }
+        } else {
+            for (let i = 0; i < 2; i++) {
+                if (select_font_size_4inch[i].value == value) {
+                    select_font_size_4inch[i].checked = true;
+                    updateConfig("select_font_size_4inch", i);
+                    break;
+                }
+                select_font_size_4inch[config.select_font_size_4inch].checked = false;
+            }
+        }
+    }
+
+    function updateRubyUI() {
+        let elScreenMain = screenWindow.document.getElementById("main")
+        if (elScreenMain.classList.contains("display_4inch")) {
+            for (let i = 0; i < 2; i++) {
+                if (select_font_size_4inch[i].checked) {
+                    updateFontSize(select_font_size_4inch[i].value)
+                }
+            }
+        } else {
+            for (let i = 0; i < 4; i++) {
+                if (select_font_size_12inch[i].checked) {
+                    updateFontSize(select_font_size_12inch[i].value)
+                }
+            }
+        }
+    }
+
+
+    // ストロークのON/OFF ----------------------------------------
+    // TODO: フラグで管理する？
+    function toggleStroke(checkbox) {
+        if (checkbox.checked) {
+            config.slider_text_stroke = document.getElementById("slider_text_stroke").value
+            config.selector_text_stroke_color = document.getElementById("selector_text_stroke_color").value
+            document.getElementById("slider_text_stroke").value = 2;
+            document.getElementById("selector_text_stroke_color").value = "#00FF00"
+            document.getElementById("checkbox_stroke").checked = true
+        } else {
+            document.getElementById("slider_text_stroke").value = config.slider_text_stroke;
+            document.getElementById("selector_text_stroke_color").value = config.selector_text_stroke_color;
+            document.getElementById("checkbox_stroke").checked = false
+        }
+        screenWindow.document.getElementById('result_text').style.webkitTextStrokeColor = document.getElementById("selector_text_stroke_color").value;
+        screenWindow.document.getElementById('result_text').style.webkitTextStrokeWidth = document.getElementById("slider_text_stroke").value + 'px';
+        document.getElementById('value_text_stroke').innerHTML = document.getElementById("slider_text_stroke").value;
+    }
+
+    // 文字色を黄色にする ON/OFF ----------------------------------------
+    function toggleTextColorYellow(checkbox){
+        let el = document.getElementById('selector_text_color');
+        if(checkbox.checked){
+            config.selector_text_color = el.value;
+            el.value='#FFFF00';
+            el.oninput();
+        }else{
+            el.value=config.selector_text_color;
+            el.oninput();
+        }
+    }
+
+    // 言語切替 ----------------------------------------
+    // 参考: https://www.google.com/intl/ja/chrome/demos/speech.html
+    const langs =
+        [['その他',      ['']],
+        ['日本語',       ['ja-JP']],
+        ['English',         ['en-US', 'United States'],
+                            ['en-AU', 'Australia'],
+                            ['en-CA', 'Canada'],
+                            ['en-IN', 'India'],
+                            ['en-KE', 'Kenya'],
+                            ['en-TZ', 'Tanzania'],
+                            ['en-GH', 'Ghana'],
+                            ['en-NZ', 'New Zealand'],
+                            ['en-NG', 'Nigeria'],
+                            ['en-ZA', 'South Africa'],
+                            ['en-PH', 'Philippines'],
+                            ['en-GB', 'United Kingdom']],
+        ['Afrikaans',       ['af-ZA']],
+        ['አማርኛ',           ['am-ET']],
+        ['Azərbaycanca',    ['az-AZ']],
+        ['বাংলা',            ['bn-BD', 'বাংলাদেশ'],
+                            ['bn-IN', 'ভারত']],
+        ['Bahasa Indonesia',['id-ID']],
+        ['Bahasa Melayu',   ['ms-MY']],
+        ['Català',          ['ca-ES']],
+        ['Čeština',         ['cs-CZ']],
+        ['Dansk',           ['da-DK']],
+        ['Deutsch',         ['de-DE']],
+        ['Español',         ['es-AR', 'Argentina'],
+                            ['es-BO', 'Bolivia'],
+                            ['es-CL', 'Chile'],
+                            ['es-CO', 'Colombia'],
+                            ['es-CR', 'Costa Rica'],
+                            ['es-EC', 'Ecuador'],
+                            ['es-SV', 'El Salvador'],
+                            ['es-ES', 'España'],
+                            ['es-US', 'Estados Unidos'],
+                            ['es-GT', 'Guatemala'],
+                            ['es-HN', 'Honduras'],
+                            ['es-MX', 'México'],
+                            ['es-NI', 'Nicaragua'],
+                            ['es-PA', 'Panamá'],
+                            ['es-PY', 'Paraguay'],
+                            ['es-PE', 'Perú'],
+                            ['es-PR', 'Puerto Rico'],
+                            ['es-DO', 'República Dominicana'],
+                            ['es-UY', 'Uruguay'],
+                            ['es-VE', 'Venezuela']],
+        ['Euskara',         ['eu-ES']],
+        ['Filipino',        ['fil-PH']],
+        ['Français',        ['fr-FR']],
+        ['Basa Jawa',       ['jv-ID']],
+        ['Galego',          ['gl-ES']],
+        ['ગુજરાતી',           ['gu-IN']],
+        ['Hrvatski',        ['hr-HR']],
+        ['IsiZulu',         ['zu-ZA']],
+        ['Íslenska',        ['is-IS']],
+        ['Italiano',        ['it-IT', 'Italia'],
+                            ['it-CH', 'Svizzera']],
+        ['ಕನ್ನಡ',             ['kn-IN']],
+        ['ភាសាខ្មែរ',          ['km-KH']],
+        ['Latviešu',        ['lv-LV']],
+        ['Lietuvių',        ['lt-LT']],
+        ['മലയാളം',          ['ml-IN']],
+        ['मराठी',             ['mr-IN']],
+        ['Magyar',          ['hu-HU']],
+        ['ລາວ',              ['lo-LA']],
+        ['Nederlands',      ['nl-NL']],
+        ['नेपाली भाषा',        ['ne-NP']],
+        ['Norsk bokmål',    ['nb-NO']],
+        ['Polski',          ['pl-PL']],
+        ['Português',       ['pt-BR', 'Brasil'],
+                            ['pt-PT', 'Portugal']],
+        ['Română',          ['ro-RO']],
+        ['සිංහල',          ['si-LK']],
+        ['Slovenščina',     ['sl-SI']],
+        ['Basa Sunda',      ['su-ID']],
+        ['Slovenčina',      ['sk-SK']],
+        ['Suomi',           ['fi-FI']],
+        ['Svenska',         ['sv-SE']],
+        ['Kiswahili',       ['sw-TZ', 'Tanzania'],
+                            ['sw-KE', 'Kenya']],
+        ['ქართული',       ['ka-GE']],
+        ['Հայերեն',          ['hy-AM']],
+        ['தமிழ்',            ['ta-IN', 'இந்தியா'],
+                            ['ta-SG', 'சிங்கப்பூர்'],
+                            ['ta-LK', 'இலங்கை'],
+                            ['ta-MY', 'மலேசியா']],
+        ['తెలుగు',           ['te-IN']],
+        ['Tiếng Việt',      ['vi-VN']],
+        ['Türkçe',          ['tr-TR']],
+        ['اُردُو',            ['ur-PK', 'پاکستان'],
+                            ['ur-IN', 'بھارت']],
+        ['Ελληνικά',         ['el-GR']],
+        ['български',         ['bg-BG']],
+        ['Pусский',          ['ru-RU']],
+        ['Српски',           ['sr-RS']],
+        ['Українська',        ['uk-UA']],
+        ['한국어',            ['ko-KR']],
+        ['中文',             ['cmn-Hans-CN', '普通话 (中国大陆)'],
+                            ['cmn-Hans-HK', '普通话 (香港)'],
+                            ['cmn-Hant-TW', '中文 (台灣)'],
+                            ['yue-Hant-HK', '粵語 (香港)']],
+        ['हिन्दी',             ['hi-IN']],
+        ['ภาษาไทย',         ['th-TH']]];
+
+    for (let i = 0; i < langs.length; i++) {
+        select_language.options[i] = new Option(langs[i][0], i);
+    }
+
+    for (let i = 0; i < langs.length; i++) {
+        select_translate_language.options[i] = new Option(langs[i][0], i);
+    }
+
+    // デフォルトの言語を設定
+    select_language.selectedIndex = 0;
+    select_translate_language.selectedIndex = 0;
+    updateCountry(1);
+    updateTranslationLanguage(1);
+    // select_dialect.selectedIndex = 0;
+
+    function updateCountry(lang_index) {
+        if (lang_index == 0) return;
+        // 中国語だけcloud speech-to-textとgasの文字コードの互換性が無いので．．．
+        if (lang_index == 58) {
+            sourceLanguage = 'zh';
+        } else {
+            sourceLanguage = langs[lang_index].slice(-1)[0][0].slice(0, 2);
+        }
+        updateRecognitionLanguage(lang_index);
+    }
+
+    function updateRecognitionLanguage(lang_index) {
+        let recognitionStoppedFlag = 0;
+        if(recognition){
+            recognition.stop();
+            recognitionStoppedFlag = 1;
+        }
+        lang = langs[lang_index][1]
+        if(recognitionStoppedFlag){
+            vrFunction();
+        }
+
+        updateKanaOptionUI();
+    }
+
+    function updateTranslationLanguage(lang_index) {
+        if (lang_index == 58) {
+            targetLanguage = 'zh';
+        } else {
+            targetLanguage = langs[lang_index].slice(-1)[0][0].slice(0, 2)
+        }
+
+        updateKanaOptionUI();
+    }
+
+    function updateKanaOptionUI() {
+        let elCheckboxHiraganaWrapper = document.getElementById('checkbox_hiragana_wrapper');
+        let elCheckboxRubyWrapper = document.getElementById('checkbox_ruby_wrapper');
+        if(lang == 'ja-JP' || targetLanguage == 'ja'){
+            elCheckboxHiraganaWrapper.style.display = "grid";
+            elCheckboxRubyWrapper.style.display = "grid";
+        }else{
+            elCheckboxHiraganaWrapper.style.display = "none";
+            elCheckboxRubyWrapper.style.display = "none";
+        }
+    }
+
+    function updateRecognitionLanguageMenu(lang_index) {
+        if (recognition_language_template_03.checked) {
+            updateCountry(lang_index)
+        }
+        recognition_language_template_03.value = lang_index;
+        document.getElementById("recognition_language_change").innerText = langs[lang_index][0]
+    }
+
+    function updateTranslationLanguageMenu(lang_index) {
+        if (translation_language_template_03.checked) {
+            updateTranslationLanguage(lang_index)
+        }
+        translation_language_template_03.value = lang_index;
+        document.getElementById("translation_language_change").innerText = langs[lang_index][0]
+    }
+
+    function reverseLanguage() {
+        let recognitionLanguageMenuChecked;
+        let translationLanguageMenuChecked;
+        for (let i=1; i<=3; i++) {
+            let el = document.getElementById("recognition_language_template_0" + String(i));
+            if (el.checked) recognitionLanguageMenuChecked = i;
+            el = document.getElementById("translation_language_template_0" + String(i));
+            if (el.checked) translationLanguageMenuChecked = i;
+        }
+
+        document.getElementById("recognition_language_template_0" + String(translationLanguageMenuChecked)).checked = true;
+        document.getElementById("translation_language_template_0" + String(recognitionLanguageMenuChecked)).checked = true;
+
+        let recognitionIndex = document.getElementById("recognition_language_template_0" + String(recognitionLanguageMenuChecked)).value;
+        let translationIndex = document.getElementById("translation_language_template_0" + String(translationLanguageMenuChecked)).value;
+        if (recognitionLanguageMenuChecked == 3) {
+            if (translationLanguageMenuChecked == 3) {
+                updateRecognitionLanguageMenu(translationIndex);
+                updateTranslationLanguageMenu(recognitionIndex);
+            }
+            else {
+                updateCountry(translationIndex);
+                updateTranslationLanguageMenu(recognitionIndex);
+            }
+        }
+        else {
+            if (translationLanguageMenuChecked == 3) {
+                updateRecognitionLanguageMenu(translationIndex);
+                updateTranslationLanguage(recognitionIndex);
+            }
+            else {
+                updateCountry(translationIndex);
+                updateTranslationLanguage(recognitionIndex);
+            }
+        }
+    }
+
+
+    // 表示文字の一時非表示 ----------------------------------------
+    let isDisplayText = true;
+
+    function toggleDisplayText() {
+        isDisplayText = !isDisplayText
+        // 該当するステータスインジケータが出来たら復活させる
+        if(isDisplayText){
+            screenWindow.removeClass('text_overlay_wrapper','hidden')
+            screenWindow.removeClass('video_wrapper_flip','hidden')
+        }else{
+            screenWindow.addClass('text_overlay_wrapper','hidden')
+            screenWindow.addClass('video_wrapper_flip','hidden')
+        }
+        document.getElementById('checkbox_display_text').checkbox = isDisplayText
+    }
+    // 文字表示のON/OFF
+    function toggleDisplayTextCheckbox(checkbox){
+        if(isDisplayText != checkbox.checked) {
+            toggleDisplayText()
+        }
+    }
+
+
+    // 表示文字の左右反転 ----------------------------------------
+    let isMirrorText = false;
+    let isMirrorTextFlip = false;
+
+    function toggleMirrorText() {
+        isMirrorText = !isMirrorText
+        // 該当するステータスインジケータが出来たら復活させる
+        if(isMirrorText){
+            screenWindow.document.getElementById("text_overlay_wrapper").classList.add("mirror");
+        }else{
+            screenWindow.document.getElementById("text_overlay_wrapper").classList.remove("mirror");
+        }
+    }
+
+    function toggleMirrorTextFlip() {
+        isMirrorTextFlip = !isMirrorTextFlip
+        // 該当するステータスインジケータが出来たら復活させる
+        if(isMirrorTextFlip){
+            screenWindow.document.getElementById("text_overlay_wrapper_flip").classList.add("mirror");
+        }else{
+            screenWindow.document.getElementById("text_overlay_wrapper_flip").classList.remove("mirror");
+        }
+    }
+
+    // 文字反転のON/OFF
+    function toggleMirrorTextCheckbox(checkbox){
+        if (checkbox.id == "checkbox_mirror_text") {
+            if(isMirrorText != checkbox.checked) toggleMirrorText()
+        }
+        if (checkbox.id == "checkbox_mirror_text_flip") {
+            if(isMirrorTextFlip != checkbox.checked) toggleMirrorTextFlip()
+        }
+    }
+
+    function toggleMirroTextBoth() {
+        checkbox_mirror_text.checked = !checkbox_mirror_text.checked;
+        checkbox_mirror_text_flip.checked = !checkbox_mirror_text_flip.checked;
+        toggleMirrorTextCheckbox(checkbox_mirror_text);
+        toggleMirrorTextCheckbox(checkbox_mirror_text_flip);
+    }
+
+    // 鏡文字の位置切替
+    function toggleFlipTextPosition(checkbox) {
+        if (checkbox.checked) {
+            screenWindow.document.getElementById("video_wrapper_flip").classList.add("display_none");
+            screenWindow.document.getElementById("video_wrapper_flip_top").classList.remove("display_none");
+            screenWindow.document.getElementById("video_wrapper_flip_top").innerHTML = screenWindow.document.getElementById("video_wrapper_flip").innerHTML;
+            screenWindow.document.getElementsByClassName("text_area")[0].setAttribute("id", "result_text_flip");
+            screenWindow.document.getElementsByClassName("text_area")[2].setAttribute("id", "");
+        } else {
+            screenWindow.document.getElementById("video_wrapper_flip_top").classList.add("display_none");
+            screenWindow.document.getElementById("video_wrapper_flip").classList.remove("display_none");
+            screenWindow.document.getElementById("video_wrapper_flip").innerHTML = screenWindow.document.getElementById("video_wrapper_flip_top").innerHTML;
+            screenWindow.document.getElementsByClassName("text_area")[2].setAttribute("id", "result_text_flip");
+            screenWindow.document.getElementsByClassName("text_area")[0].setAttribute("id", "");
+        }
+    }
+
+    // 表示文字の手動削除 ----------------------------------------
+    function deleteText() {
+        screenWindow.document.getElementById('result_text').innerHTML = "";
+        screenWindow.document.getElementById('result_text_flip').innerHTML = "";
+        lastFinished = "";
+        vrFunction();
+    }
+
+    function newline() {
+        if(speechFlag == 1){
+            recognition.stop();
+        } else {
+            screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, "&nbsp;"].join('<br>');
+            screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, "&nbsp;"].join('<br>');
+            lastFinished = ""
+        }
+    }
+
+    function putExclamationMark() {
+        if(speechFlag == 1){
+            exclamationMarkFlag = true;
+            recognition.stop();
+        } else {
+            screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, "！"].join('<br>');
+            screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, "！"].join('<br>');
+            lastFinished = "！"
+        }
+    }
+
+    function putQuestionMark() {
+        if(speechFlag == 1){
+            questionMarkFlag = true;
+            recognition.stop();
+        } else {
+            screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, "？"].join('<br>');
+            screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, "？"].join('<br>');
+            lastFinished = "？"
+        }
+    }
+
+    // ディスプレイサイズ切替 ----------------------------------------
+    function toggleDisplayMode(){
+        let elScreenMain = screenWindow.document.getElementById('main')
+        elScreenMain.classList.toggle('display_4inch')
+        let elStatus = document.getElementById('status_display_mode')
+        if(elScreenMain.classList.contains('display_4inch')){
+            elStatus.children[0].innerHTML = "4″"
+            document.getElementById('selector_12inch').classList.add('display_none')
+            document.getElementById('selector_4inch').classList.remove('display_none')
+            updateConfig('display_size', 4)
+            updateFontSize(select_font_size_4inch[config.select_font_size_4inch].value)
+        }else{
+            elStatus.children[0].innerHTML = "12″"
+            document.getElementById('selector_4inch').classList.add('display_none')
+            document.getElementById('selector_12inch').classList.remove('display_none')
+            updateConfig('display_size', 12)
+            updateFontSize(select_font_size_12inch[config.select_font_size_12inch].value)
+        }
+    }
+
+    fixText.onkeyup = (e) => {
+        recognition.stop();
+        screenWindow.document.getElementById('result_text').innerHTML = [lastFinished, fixText.value].join('<br>');
+        screenWindow.document.getElementById('result_text_flip').innerHTML = [lastFinished, fixText.value].join('<br>');
+    }
+
+    function openModal() {
+        recognition.stop();
+        document.getElementById("modal").classList.remove("hidden");
+        document.getElementById("mask").classList.remove("hidden");
+    }
+
+    function closeModal() {
+        document.getElementById("modal").classList.add("hidden");
+        document.getElementById("mask").classList.add("hidden");
+        lastFinished = fixText.value + "。";
+        fixText.value = "";
+        recognition.start();
+    }
+
+    // 認識結果のログのtextareaを自動変形する
+    // 参考: https://webparts.cman.jp/input/textarea/
+    function textAreaHeightSet(argObj){
+        // ==============================================
+        //	フォーカス時の背景色リセット
+        // ==============================================
+        // 一旦テキストエリアを小さくしてスクロールバー（縦の長さを取得）
+        argObj.style.height = "80px";
+        var wSclollHeight = parseInt(argObj.scrollHeight);
+        // 1行の長さを取得する
+        var wLineH = parseInt(argObj.style.lineHeight.replace(/px/, ''));
+        // 最低2行の表示エリアにする
+        if(wSclollHeight < (wLineH * 2)){wSclollHeight=(wLineH * 2);}
+        // テキストエリアの高さを設定する
+        argObj.style.height = wSclollHeight + "px";
+    }
+
+
+    // トースト通知 ----------------------------------------
+    const toast = document.getElementById('translation_toast')
+    let isVisivle = false
+
+    function showToast(message) {
+        if (isVisivle) return false
+
+        toast.innerHTML = message
+        toast.classList.add('is_show')
+        isVisivle = true
+        screenWindow.showScreenToast(message)
+    }
+
+    toast.addEventListener('animationend', () => {
+        toast.innerHTML = '';
+        toast.className = 'toast';
+        isVisivle = false;
+    });
+
+    // 設定保持の処理 ----------------------------------------
+    // 保存仕様が変わったらconfig_v?表記を変更。2箇所あるので注意
+    function updateConfig(key, value) {
+        config[key] = value;
+        localStorage.see_through_captions_config_v2 = JSON.stringify(config);
+    }
+
+    function updateConfigValue() {
+        updateConfig(this.id, this.value);
+    }
+
+    function deleteConfig() {
+        localStorage.removeItem('see_through_captions_config_v2');
+        location.reload();
+    }
+
+    // select要素のoptionに、option.valueがvalueな項目があれば選択する
+    // 戻り値は、option中に該当項目があればtrue
+    function selectValueIfExists(select, value) {
+        if (value === null || value === undefined) return;
+        let result = false;
+        select.childNodes.forEach(n => {
+            if (n.value === value) {
+            select.value = value;
+            result = true;
+            }
+        })
+        return result;
+    }
+
+    // 設定パラメーターの呼び出し
+    // 保存仕様が変わったらconfig_v?表記を変更。2箇所あるので注意
+    let config = JSON.parse(localStorage.see_through_captions_config_v2 || '{}');
+
+    function initConfig() {
+        function triggerEvent(type, elem) {
+            let event = document.createEvent('HTMLEvents');
+            event.initEvent(type, true, true);
+            elem.dispatchEvent(event);
+        }
+
+        ['slider_font_size',
+         'slider_flip_font_size',
+         'slider_line_height',
+         'slider_letter_spacing',
+         'selector_text_color',
+         'slider_text_shadow_stroke',
+         'selector_text_shadow_color',
+         'slider_text_stroke',
+         'selector_text_stroke_color',
+         'slider_opacity',
+        ].forEach(id => {
+            if (typeof config[id] !== 'undefined') {
+                let el = document.getElementById(id);
+                el.value = config[id];
+                triggerEvent('input', el);
+            }
+        });
+
+        ['text_overlay_wrapper'
+        ].forEach(id => {
+            if (typeof config[id] !== 'undefined') {
+            let el = document.getElementById(id);
+            if (config[id]) {
+                Object.keys(config[id]).forEach(key => {
+                if (config[id][key]) {
+                    el.classList.add(key);
+                } else {
+                    el.classList.remove(key);
+                }
+                });
+            }
+            }
+        });
+
+        if (typeof config.select_font !== 'undefined') {
+            select_font.selectedIndex = config.select_font;
+            triggerEvent('change', select_font);
+        }
+
+        if (typeof config.select_weight !== 'undefined') {
+            select_weight.selectedIndex = config.select_weight;
+            triggerEvent('change', select_weight);
+        }
+
+        if (typeof config.checkbox_ruby_font_scaling !== 'undefined') {
+            checkbox_ruby_font_scaling.checked = config.checkbox_ruby_font_scaling;
+            triggerEvent('change', checkbox_ruby_font_scaling);
+        }
+
+        if (typeof config.select_autoclear_text !== 'undefined') {
+            select_autoclear_text[config.select_autoclear_text].checked = true
+            updateTextClearSecond(select_autoclear_text[config.select_autoclear_text].value)
+            triggerEvent('change', select_autoclear_text);
+        }
+
+        if (typeof config.select_font_size_12inch !== 'undefined') {
+            select_font_size_12inch[config.select_font_size_12inch].checked = true
+            if (config.display_size == 12) updateFontSize(select_font_size_12inch[config.select_font_size_12inch].value)
+            triggerEvent('change', select_font_size_12inch);
+        } else {
+            updateConfig('select_font_size_12inch',3);
+        }
+
+        if (typeof config.select_font_size_4inch !== 'undefined') {
+            select_font_size_4inch[config.select_font_size_4inch].checked = true
+            if (config.display_size == 4) updateFontSize(select_font_size_4inch[config.select_font_size_4inch].value)
+            triggerEvent('change', select_font_size_4inch);
+        } else {
+            updateConfig('select_font_size_4inch',1);
+        }
+
+        if (typeof config.slider_font_size !== 'undefined') {
+            slider_font_size.value = config.slider_font_size;
+            updateFontSizeSlider([config.slider_font_size]);
+            triggerEvent('input', slider_font_size);
+        }
+
+        if (typeof config.checkbox_voice_command !== 'undefined') {
+            let el = document.getElementById('checkbox_voice_command');
+            el.checked = config.checkbox_voice_command;
+            triggerEvent('input', el);
+        }
+
+        if (typeof config.checkbox_hiragana !== 'undefined') {
+            let el = document.getElementById('checkbox_hiragana');
+            el.checked = config.checkbox_hiragana;
+            triggerEvent('input', el);
+        }
+
+        if (typeof config.checkbox_ruby !== 'undefined') {
+            let el = document.getElementById('checkbox_ruby');
+            el.checked = config.checkbox_ruby;
+            triggerEvent('input', el);
+        }
+
+        if (typeof config.checkbox_stroke !== 'undefined') {
+            let el = document.getElementById('checkbox_stroke');
+            el.checked = config.checkbox_stroke;
+            triggerEvent('input', el);
+        }
+
+        if (typeof config.checkbox_text_color_yellow !== 'undefined') {
+            let el = document.getElementById('checkbox_text_color_yellow');
+            el.checked = config.checkbox_text_color_yellow;
+            triggerEvent('input', el);
+        }
+
+        if (typeof config.display_size !== 'undefined') {
+            if (config.display_size == 4) {
+                toggleDisplayMode()
+            }
+        } else {
+            updateConfig('display_size',12);
+        }
+
+        if (typeof config.translate_api !== 'undefined') {
+            translateBaseUrl = "https://script.google.com/macros/s/" + config.translate_api + "/exec";
+        }
+
+        if (translateBaseUrl !== '') {
+            document.getElementsByClassName("radios_wrapper_with_button")[0].classList.remove("display_none")
+        }   
+
+        document.querySelectorAll('input.control_input').forEach(
+            el => el.addEventListener('input', updateConfigValue)
+        );
+        document.querySelector('#select_font').addEventListener('change', updateConfigValue);
+        document.querySelector('#select_weight').addEventListener('change', updateConfigValue);
+        document.querySelector('#checkbox_ruby_font_scaling').addEventListener('change', (e) => {updateConfig(e.target.id, e.target.checked)});
+        document.querySelector('#select_autoclear_text').addEventListener('change', (e) => {updateConfig(e.target.id, e.target.selectedIndex)});
+        document.querySelector('#checkbox_voice_command').addEventListener('input', (e) => {updateConfig(e.target.id, e.target.checked)});
+        document.querySelector('#checkbox_hiragana').addEventListener('input', (e) => {updateConfig(e.target.id, e.target.checked)});
+        document.querySelector('#checkbox_ruby').addEventListener('input', (e) => {updateConfig(e.target.id, e.target.checked)});
+        document.querySelector('#checkbox_stroke').addEventListener('input', (e) => {updateConfig(e.target.id, e.target.checked)});
+        document.querySelector('#checkbox_text_color_yellow').addEventListener('input', (e) => {updateConfig(e.target.id, e.target.checked)});
+    }
+    
+    function getParam(name) {
+        let url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    function setTransateAPIbyTextBox(api) {
+        translateBaseUrl = "https://script.google.com/macros/s/" + api + "/exec";
+        updateConfig("translate_api", api);
+        document.getElementsByClassName("radios_wrapper_with_button")[0].classList.remove("display_none");
+        textarea_api.value = "";
+        textarea_api.blur();
+    }
+
+    window.onload = () => {
+        let translateAPI = getParam("translate_api");
+        if (translateAPI != "" && translateAPI != null) {
+            translateBaseUrl = "https://script.google.com/macros/s/" + translateAPI + "/exec";
+            updateConfig("translate_api", translateAPI);
+            history.replaceState('','','/index.html');
+        }
+        
+        vrFunction();
+    }
+</script>
+</html>

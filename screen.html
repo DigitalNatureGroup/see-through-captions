@@ -1,0 +1,76 @@
+<!-- ============================================================================================
+Copyright (c) 2022 Digital Nature Group, University of Tsukuba & xDiversity
+Licensed under MIT (https://github.com/DigitalNatureGroup/see-through-captions/blob/main/LICENSE)
+============================================================================================= -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache">
+
+    <title>Screen | See-Through Captions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/style.css?ver=202112281400" type="text/css" media="screen" charset="utf-8" />
+</head>
+
+<body class="screen">
+    <div id="main" class="main">
+        <div id="screen_translation_toast" class="toast"></div>
+        <div id="screen_area">
+            <div id="video_wrapper_flip_top" class="video_wrapper display_none"  style="">
+                <div id="text_overlay_wrapper_top" class="text_overlay_wrapper full">
+                    <div id="" class="text_area mirror">See-Through Captions: ろう・難聴者とのコミュニケーションのためのリアルタイム字幕を表示する透明ディスプレイ。</div>
+                </div>
+            </div>
+            <div id="video_wrapper" class="video_wrapper" style="">
+                <div class="scroll_description" id="scroll_description">
+                    <p>See-Through Captions: ろう・難聴者とのコミュニケーションのためのリアルタイム字幕を表示する透明ディスプレイ。</p>
+                </div>
+                <div id="text_overlay_wrapper" class="text_overlay_wrapper full">
+                    <div id="result_text" class="text_area">See-Through Captions: ろう・難聴者とのコミュニケーションのためのリアルタイム字幕を表示する透明ディスプレイ。</div>
+                </div>
+            </div>
+            <div id="video_wrapper_flip" class="video_wrapper"  style="">
+                <div id="text_overlay_wrapper_flip" class="text_overlay_wrapper full">
+                    <div id="result_text_flip" class="text_area mirror">See-Through Captions: ろう・難聴者とのコミュニケーションのためのリアルタイム字幕を表示する透明ディスプレイ。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    function addClass(id, className) {
+        let el = document.getElementById(id);
+        let value = el.classList.add(className);
+        opener.updateConfigClass(id, className, value);
+    }
+
+    function removeClass(id, className) {
+        let el = document.getElementById(id);
+        let value = el.classList.remove(className);
+        opener.updateConfigClass(id, className, value);
+    }
+
+    window.onload = () => {
+        window.opener.initConfig();
+    };
+
+    const screenToast = document.getElementById('screen_translation_toast');
+
+    function showScreenToast(message) {
+        screenToast.innerHTML = message
+        screenToast.classList.add('is_show')
+    }
+
+    screenToast.addEventListener('animationend', () => {
+        screenToast.innerHTML = '';
+        screenToast.className = 'toast'
+    })
+</script>
+
+</html>

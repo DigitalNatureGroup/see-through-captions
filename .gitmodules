@@ -1,0 +1,3 @@
+[submodule "submodule/kuromoji"]
+	path = submodule/kuromoji
+	url = git@github.com:takuyaa/kuromoji.js.git
