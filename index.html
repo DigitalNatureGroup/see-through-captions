@@ -643,14 +643,16 @@ Licensed under MIT (https://github.com/DigitalNatureGroup/see-through-captions/b
                     }
                     // 複合動詞判定
                     let pattern =  /^[\u4E00-\u9FFF]+[\u3041-\u3093]+[\u4E00-\u9FFF]+$/
+                    let surfaceStartPoint;
+                    let readingStartPoint;
                     if (kuromojiResult[i].surface_form.match(pattern)) {
                         compoundVerbFlag = true;
                         for (let j = 0; j < rubyHiragana.length; j++) {
                             // surfaceForm中最初のひらがなのインデックス
-                            const surfaceStartPoint = kuromojiResult[i].surface_form.match(/[\u3041-\u3093]/).index
+                            surfaceStartPoint = kuromojiResult[i].surface_form.match(/[\u3041-\u3093]/).index
                             if (kuromojiResult[i].surface_form[surfaceStartPoint] == rubyHiragana[j]) {
                                 // reading中最初のひらがなのインデックス
-                                const readingStartPoint = j;
+                                readingStartPoint = j;
                                 break;
                             }
                         }
